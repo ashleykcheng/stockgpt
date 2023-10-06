@@ -1,7 +1,8 @@
 import axios from 'axios';
 
+
 export default function getPrice(ticker) {
-  const apiKey = 'ck8gh1pr01qmbnh43psgck8gh1pr01qmbnh43pt0';
+  const apiKey = process.env.FINNHUB_API_KEY;
   const apiUrl = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;
 
   const options = {
@@ -19,6 +20,5 @@ export default function getPrice(ticker) {
     }
   });
 }
-
 
 

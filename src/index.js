@@ -8,6 +8,7 @@ import SignUpPage from './pages/Signup';
 import App from './pages/App';
 import SearchPage from './pages/Search';
 import TradePage from './pages/Trade';
+import PredictPage from './pages/Predict';
 import ProtectedRoutes from './ProtectedRoutes';
 import { AuthContext } from './context/AuthContext';
 
@@ -20,6 +21,7 @@ root.render(
                 <Route element = {<ProtectedRoutes/>}>
                     <Route path="/dashboard" element={<DashboardPage />}/>
                     <Route path="/trade" element={<TradePage />}/>
+                    <Route path="/predict" element={<PredictPage />}/>
                 </Route>
                 <Route path="/search" element={<SearchPage />}/>
                 <Route path="/login" element={<LoginPage />}/>

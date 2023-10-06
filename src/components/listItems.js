@@ -27,12 +27,13 @@ export const mainListItems = (
       <ListItemText primary="Trade" />
     </ListItemButton>
     </Link>
+    <Link to= "/predict" style={{ color: 'inherit', textDecoration: 'inherit'}}>
     <ListItemButton>
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>
       <ListItemText primary="Predictions" />
     </ListItemButton>
-   
+    </Link>
   </React.Fragment>
 );

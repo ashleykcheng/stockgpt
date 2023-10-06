@@ -15,7 +15,7 @@ export default function Deposits() {
         2.5%
       </Typography>
       <Typography color="text.secondary" sx={{ flex: 1 }}>
-        since 15 March, 2019
+        all time
       </Typography>
     </React.Fragment>
   );

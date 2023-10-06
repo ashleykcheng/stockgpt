@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getCollections, collection, addDoc, query, where, getDocs, updateDoc } from "firebase/firestore"; 
+import {  setDoc, doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc } from "firebase/firestore"; 
 
 
 const firebaseConfig = {
@@ -15,14 +15,10 @@ const firebaseConfig = {
     measurementId: process.env.REACT_APP_MEASUREMENT_ID
 }
 
-
-
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const provider = new GoogleAuthProvider();
 const auth = getAuth();
-
-
 
 const signInWithGoogle = () => {
   return new Promise(async (resolve, reject) => {
@@ -33,11 +29,12 @@ const signInWithGoogle = () => {
       const token = credential.accessToken;
       const db = getFirestore(app);
       const user = result.user;
+      console.log(user);
       const q = query(collection(db, "users"), where("userID", "==", user.uid));
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
-        await createUserInfo(user);
+        await createUserInfo(user, user.displayName);
       }
       
       resolve(user);
@@ -48,14 +45,12 @@ const signInWithGoogle = () => {
   });
 }
 
-const createNewUser = (email, password) => {
+const createNewUser = (email, password, firstName, lastName) => {
   return new Promise ((resolve, reject) => {
-    console.log("email: ", email);
-    console.log("password: ", password);
     createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
-      createUserInfo(user);
+      createUserInfo(user, firstName + " " + lastName);
       console.log("user: ", user);
       resolve(user);
     })
@@ -83,62 +78,69 @@ const signInUser = (email, password) => {
   })
 }
 
+
 const addTrade = async (user, docData) => {
-  const db = getFirestore(app);
-  // Add trade to trades collection
-  const docRef = await addDoc(collection(db, "trades"), docData);
+  const db = getFirestore();
 
-  // Get document with our user info
-  const q = query(collection(db, "users"), where("userID", "==", user.uid));
-  const querySnapshot = await getDocs(q);
+  // Add trade to the "trades" collection
+  const tradesCollectionRef = collection(db, "trades");
+  await addDoc(tradesCollectionRef, docData);
+  const uid = user.uid;
+  // gets user document from users collection
+  const docRef = doc (db, "holdings", uid);
+  
+  const stockSymbol = docData.stock;
+  const quantity = docData.amount;
+  
+  const docSnap = await getDoc(docRef);
+  const data = docSnap.data();
+  const stockAmount = data[stockSymbol];
+  console.log("stock", stockAmount);
 
-  if (!querySnapshot.empty) {
-    const userDocument = querySnapshot.docs[0];
-    const querySnapshot = await getDocs(collection(db, "users", "holdings"));
-
-    const newHolding = {
-      stockSymbol: docData.stock,
-      quantity: docData.amount,
-    };
-
-    const existingHoldingQuery = query(holdingsRef, where("stockSymbol", "==", newHolding.stockSymbol));
-    const existingHoldingSnapshot = await getDocs(existingHoldingQuery);
-
-    if (!existingHoldingSnapshot.empty) {
-      const existingHoldingDoc = existingHoldingSnapshot.docs[0];
-      const existingHoldingData = existingHoldingDoc.data();
-
-      const updatedQuantity = existingHoldingData.quantity + newHolding.quantity;
-
-      await updateDoc(existingHoldingDoc.ref, { quantity: updatedQuantity });
-    } else {
-      await addDoc(holdingsRef, newHolding);
+  if (docData.action == 'buy'){
+    if (stockAmount != null){
+      console.log("update");
+      const newStockAmount = Number(stockAmount) + Number(quantity);
+      await updateDoc (docRef, {[stockSymbol]: Number(newStockAmount)});
     }
-  } else {
-    console.error("User document not found.");
+    else{
+      console.log("new");
+      const newHolding = {
+        [stockSymbol]: Number(quantity),
+      }
+      await updateDoc(docRef, newHolding);
+    }
   }
-
-  console.log("doc", docRef);
+  else{
+    if (stockAmount != null){
+      console.log("update");
+      if (stockAmount >= quantity){
+        const newStockAmount = Number(stockAmount) - Number(quantity);
+        await updateDoc (docRef, {[stockSymbol]: Number(newStockAmount)});
+      }
+      else{
+        console.log("error");
+      }
+    }
+    else{
+      console.log("error");
+    }
+  }
 };
 
-
-
-const updateUser = async (user) => {
-  const uid = user.uid;
-  const userData = {
-    uid: uid,
-    balance: 0,
-  }
-}
-
-const createUserInfo = async (user) => {
+const createUserInfo = async (user, displayName) => {
   const db = getFirestore(app);
   const uid = user.uid;
+
   const userData = {
-    uid: uid,
-    balance: 0,
+    userID: uid,
+    name: displayName,
+    balance: Number(10000),
   }
-  const userRef = await addDoc(collection(db, "users"), userData);
+
+  await addDoc(collection(db, "users"), userData);
+  await setDoc(doc(db, "holdings", uid), {userID: uid});
+
 }
 
 const getOrders = async (user) => {
@@ -153,6 +155,13 @@ const getOrders = async (user) => {
   });
 
   return ordersArray;
+}
+
+const getBalance = async (user) => {
+  const db = getFirestore(app);
+  const q = query(collection(db, "trades"), where("userID", "==", user.uid));
+  const querySnapshot = await getDocs(q);
+  
 }
 
 

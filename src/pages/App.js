@@ -4,12 +4,12 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
 import Navbar from '../components/Navbar';
 import Copyright from '../components/Copyright';
 import { useContext } from "react";
 import { Context } from "../context/AuthContext";
-
+import { Button } from '@mui/material';
+import { Link } from "react-router-dom";
 
 const defaultTheme = createTheme();
 
@@ -31,10 +31,31 @@ export default function App() {
         <Container component="main" sx={{ mt: 10, mb: 2 }} maxWidth="sm">
         {user ? (
       
-            <Typography variant="h1">Welcome back!</Typography>
+      <div>
+      <Typography variant="h2" gutterBottom>
+        Welcome Back!
+      </Typography>
+      <Typography variant="body1" paragraph>
+        You are now signed in, and have full access to StockGPT.
+      </Typography>
+      <Typography variant="body2" paragraph>
+        Discover the latest market trends and trading opportunities.
+      </Typography>
+    
+      <Button variant="contained" color="primary">
+        <Link to ="/dashboard" style={{ color: 'inherit', textDecoration: 'inherit'}}>Start Trading Now</Link>
+      </Button>
+    </div>
 
         ) : (
-          <Typography variant="h1">Welcome, please sign in</Typography>
+          <div>
+            <Typography variant="h2" gutterBottom>
+              Welcome! Please sign in to get started.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              It's just you, the stock market, and $10,000. And a pretty intelligent helper. How far can you get?
+            </Typography>
+          </div>
         )}
         </Container>
         <Box
